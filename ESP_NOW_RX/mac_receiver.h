@@ -1,60 +1,54 @@
 #ifndef MAC_RECEIVER_H
 #define MAC_RECEIVER_H
 
-#include <esp_now.h>
 #include <WiFi.h>
+#include <esp_now.h>
 
-// 必须与发送端保持一致
-#define ARRAY_SIZE 5
-
-class MacReceiver {
-public:
-    // 接收数据的回调函数类型
-    typedef void (*DataCallback)(uint8_t id, uint16_t dataArray[ARRAY_SIZE], const uint8_t *macAddr);
-    
-    MacReceiver();
-    
-    // 初始化接收器
-    void begin();
-    
-    // 需要在主循环中定期调用
-    void update();
-    
-    // 设置数据接收回调函数
-    void setCallback(DataCallback callback);
-    
-    // 获取连接状态
-    bool isConnected() const;
-    
-    // 获取最后接收时间
-    uint32_t getLastReceivedTime() const;
-    
-    // 设置超时时间（毫秒）
-    void setTimeout(uint32_t timeout);
-
-    
-
-private:
-    // 与发送端匹配的数据结构
-    struct DataStruct {
-        uint8_t id;
-        uint16_t dataArray[ARRAY_SIZE];
-    };
-    
-    static DataCallback _dataCallback;       // 用户回调函数
-    static bool _connectionEstablished;      // 连接状态
-    static uint32_t _lastReceivedTime;       // 最后接收时间
-    static uint32_t _timeout;                // 超时时间（默认5000ms）
-    
-    // ESP-NOW接收回调函数（静态成员）
-    static void _onDataRecv(const esp_now_recv_info_t *info, const uint8_t *incomingData, int len);
-    
-    // 打印MAC地址的辅助函数
-    static void _printMacAddress(const uint8_t *mac);
-
-    
+// 定义数据结构（收发共用）
+#define ARRAY_SIZE 10
+struct DataStruct {
+    uint8_t id;
+    uint16_t dataArray[ARRAY_SIZE];
 };
 
-void handleReceivedData(uint8_t id, uint16_t dataArray[ARRAY_SIZE], const uint8_t *macAddr);
+class MacTransceiver {
+private:
+    // 成员变量
+    uint8_t _receiverMac[6] = {0xE8, 0x06, 0x90, 0x9B, 0x5A, 0x94};
+    bool _sendConnection = false;
+    bool _receiveConnection = false;
+    uint32_t _lastSendHandshake = 0;
+    uint32_t _lastReceiveTime = 0;
+    uint32_t _timeout = 3000;
+    DataStruct _txData;
+    DataStruct _rxData;
+    
+    static MacTransceiver* _instance; // 静态单例指针
+    
+    // 私有回调处理器
+    void handleDataSent(const uint8_t* mac, esp_now_send_status_t status);
+    void handleDataRecv(const uint8_t* senderMac, const uint8_t* data, int len);
+
+public:
+    // 构造函数与初始化
+    MacTransceiver(uint8_t id = 1);
+    void begin(const uint8_t* targetMac = nullptr);
+    
+    // 发送功能
+    void sendData(uint16_t d1, uint16_t d2, uint16_t d3, uint16_t d4, uint16_t d5, uint16_t d6, uint16_t d7, uint16_t d8, uint16_t d9, uint16_t d10);
+    void updateSender();
+    
+    // 接收功能
+    void updateReceiver();
+    void printReceivedData() const;
+    
+    // 状态查询
+    bool isSendConnected() const { return _sendConnection; }
+    bool isReceiveConnected() const { return _receiveConnection; }
+    
+    // 静态回调包装器（修改后的签名）
+    static void OnDataSent(const uint8_t* mac, esp_now_send_status_t status);
+    static void OnDataRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len);
+};
 
 #endif

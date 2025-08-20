@@ -1,128 +1,134 @@
 #include "mac_sender.h"
 
-// 静态成员初始化
-// const uint8_t MacSender::defaultMac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-const uint8_t MacSender::defaultMac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-MacSender* MacSender::_instance = nullptr;
+// 初始化静态成员
+MacTransceiver* MacTransceiver::_instance = nullptr;
 
-// 构造函数
-MacSender::MacSender(HardwareSerial &serialPort, 
-                     uint8_t rxPin, 
-                     uint8_t txPin,
-                     const uint8_t* mac) : 
-    _serial(serialPort),
-    _rxPin(rxPin),
-    _txPin(txPin),
-    _connectionEstablished(false),
-    _lastHandshakeTime(0)
-{
-    memcpy(_receiverMac, mac, 6);
-    
-    // 初始化数据结构
-    _myData.id = 1;
-    for (int i = 0; i < 5; i++) {
-        _myData.dataArray[i] = 0;
+// === 构造函数与初始化 ===
+MacTransceiver::MacTransceiver(uint8_t id) {
+    _txData.id = id;
+    for (int i = 0; i < ARRAY_SIZE; i++) {
+        _txData.dataArray[i] = 0;
+        _rxData.dataArray[i] = 0;
     }
-    
     _instance = this;  // 设置单例实例
 }
 
-// 初始化ESP-NOW
-void MacSender::begin() {
-    _serial.begin(115200);
-    HardwareSerial serialPort(1);
-    serialPort.begin(115200, SERIAL_8N1, _rxPin, _txPin);
+void MacTransceiver::begin(const uint8_t* targetMac) {
+    Serial.begin(115200);
+    
+    if(targetMac) memcpy(_receiverMac, targetMac, 6);
     
     WiFi.mode(WIFI_STA);
+    // 设置发送功率
+    #ifdef WIFI_POWER_21dBm
+    WiFi.setTxPower(WIFI_POWER_21dBm);
+    #endif
 
-    esp_err_t result = esp_wifi_config_espnow_rate(WIFI_IF_STA, WIFI_PHY_RATE_1M_L);
+    // 设置1Mbps传输速率
+    esp_wifi_config_espnow_rate(WIFI_IF_STA, WIFI_PHY_RATE_1M_L);
     
-    if(result == ESP_OK) {
-        serialPort.println("ESP-NOW速率已设置为1Mbps");
-    } else {
-        serialPort.printf("速率设置失败: %s\n", esp_err_to_name(result));
-    }
-
     if (esp_now_init() != ESP_OK) {
-        serialPort.println("ESP-NOW初始化失败!");
+        Serial.println("ESP-NOW initialization failed!");
         return;
     }
 
+    // 注册收发回调
     esp_now_register_send_cb(OnDataSent);
+    esp_now_register_recv_cb(OnDataRecv);
     
-    esp_now_peer_info_t peerInfo;
+    // 添加对等设备
+    esp_now_peer_info_t peerInfo = {};
     memcpy(peerInfo.peer_addr, _receiverMac, 6);
     peerInfo.channel = 0;
     peerInfo.encrypt = false;
     peerInfo.ifidx = WIFI_IF_STA;
-    
+
     if (esp_now_add_peer(&peerInfo) != ESP_OK) {
-        serialPort.println("添加对等设备失败!");
+        Serial.println("Failed to add peer device!");
         return;
     }
+    else{
+        Serial.println("Peer device added successfully!");
+    }
     
-    serialPort.print("发送端MAC: ");
-    serialPort.println(WiFi.macAddress());
-    serialPort.println("ESP-NOW初始化成功");
-    
-    delay(2000);
+    Serial.print("Local MAC: ");
+    Serial.println(WiFi.macAddress());
+    Serial.println("Full-duplex mode ready");
 }
 
-// 数据发送回调
-void MacSender::OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+// === 发送功能 ===
+void MacTransceiver::sendData(uint16_t d1, uint16_t d2, uint16_t d3, uint16_t d4,
+                                uint16_t d5,uint16_t d6,uint16_t d7,uint16_t d8,
+                                uint16_t d9,uint16_t d10) {
+    if (!_sendConnection) return;
+    
+    _txData.dataArray[0] = d1;
+    _txData.dataArray[1] = d2;
+    _txData.dataArray[2] = d3;
+    _txData.dataArray[3] = d4;
+    _txData.dataArray[4] = d5;
+    _txData.dataArray[5] = d6;
+    _txData.dataArray[6] = d7;
+    _txData.dataArray[7] = d8;
+    _txData.dataArray[8] = d9;
+    _txData.dataArray[9] = d10;
+    
+    esp_now_send(_receiverMac, (uint8_t*)&_txData, sizeof(_txData));
+}
+
+void MacTransceiver::updateSender() {
+    // 3秒心跳维持连接
+    if (millis() - _lastSendHandshake > 3000) {
+        esp_now_send(_receiverMac, (uint8_t*)&_txData, sizeof(_txData));
+        _lastSendHandshake = millis();
+    }
+}
+
+// === 接收功能 ===
+void MacTransceiver::updateReceiver() {
+    // 接收超时检测
+    if (_receiveConnection && (millis() - _lastReceiveTime > _timeout)) {
+        Serial.println("Receive timeout, connection may be interrupted!");
+        _receiveConnection = false;
+    }
+}
+
+void MacTransceiver::printReceivedData() const {
+    Serial.print("Received data [ID:");
+    Serial.print(_rxData.id);
+    Serial.print("]: ");
+    for(int i = 0; i < 10; i++) {
+        Serial.print(_rxData.dataArray[i]);
+        if(i < 9) Serial.print(",");
+    }
+    Serial.println();
+}
+
+// === 回调处理器 ===
+void MacTransceiver::handleDataSent(const uint8_t* mac, esp_now_send_status_t status) {
+    if (memcmp(mac, _receiverMac, 6) == 0) {
+        _sendConnection = (status == ESP_NOW_SEND_SUCCESS);
+    }
+}
+
+void MacTransceiver::handleDataRecv(const uint8_t* senderMac, const uint8_t* data, int len) {
+    if (len == sizeof(DataStruct)) {
+        memcpy(&_rxData, data, len);
+        _receiveConnection = true;
+        _lastReceiveTime = millis();
+    }
+}
+
+// === 静态回调包装器 ===
+void MacTransceiver::OnDataSent(const uint8_t* mac, esp_now_send_status_t status) {
     if (_instance) {
-        if (status == ESP_NOW_SEND_SUCCESS) {
-            _instance->_connectionEstablished = true;
-        } else {
-            _instance->_connectionEstablished = false;
-        }
+        _instance->handleDataSent(mac, status);
     }
 }
 
-// 发送用户数据
-void MacSender::sendData(uint16_t userdata1, uint16_t userdata2, 
-                         uint16_t userdata3, uint16_t userdata4) {
-    if (!_connectionEstablished) return;
-    
-    // 更新数据结构
-    _myData.dataArray[0] = userdata1;
-    _myData.dataArray[1] = userdata2;
-    _myData.dataArray[2] = userdata3;
-    _myData.dataArray[3] = userdata4;
-    
-    // 发送数据
-    esp_err_t result = esp_now_send(_receiverMac, (uint8_t *)&_myData, sizeof(_myData));
-    
-    // 记录发送状态
-    if (result == ESP_OK) {
-        _serial.print("数据发送请求已提交: [");
-        _serial.print(_myData.dataArray[0]); _serial.print(",");
-        _serial.print(_myData.dataArray[1]); _serial.print(",");
-        _serial.print(_myData.dataArray[2]); _serial.print(",");
-        _serial.print(_myData.dataArray[3]); _serial.println("]");
-    } else {
-        _serial.println("发送请求失败!");
+void MacTransceiver::OnDataRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
+    if (_instance && info != nullptr) {
+        _instance->handleDataRecv(info->src_addr, data, len);
     }
 }
 
-// 更新连接状态
-void MacSender::update() {
-    if (millis() - _lastHandshakeTime > 3000) {
-        if (!_connectionEstablished) {
-            _serial.println("尝试建立连接...");
-        }
-        
-        esp_now_send(_receiverMac, (uint8_t *)&_myData, sizeof(_myData));
-        _lastHandshakeTime = millis();
-    }
-}
-
-// 设置接收方MAC地址
-void MacSender::setReceiverMac(const uint8_t* mac) {
-    memcpy(_receiverMac, mac, 6);
-}
-
-// 检查连接状态
-bool MacSender::isConnected() const {
-    return _connectionEstablished;
-}

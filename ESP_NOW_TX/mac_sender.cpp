@@ -131,4 +131,3 @@ void MacTransceiver::OnDataRecv(const esp_now_recv_info_t* info, const uint8_t* 
         _instance->handleDataRecv(info->src_addr, data, len);
     }
 }
-

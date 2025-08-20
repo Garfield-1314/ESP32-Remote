@@ -1,6 +1,5 @@
 #include "mac_receiver.h"
 
-
 // 初始化静态成员
 MacTransceiver* MacTransceiver::_instance = nullptr;
 

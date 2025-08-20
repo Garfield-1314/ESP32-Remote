@@ -14,7 +14,7 @@ struct DataStruct {
 class MacTransceiver {
 private:
     // 成员变量
-    uint8_t _receiverMac[6] = {0xE8, 0x06, 0x90, 0x9B, 0x5A, 0x94};
+    uint8_t _receiverMac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     bool _sendConnection = false;
     bool _receiveConnection = false;
     uint32_t _lastSendHandshake = 0;

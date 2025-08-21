@@ -1,5 +1,6 @@
 #include "firstcall.h"
 #include <cstring>
+#include "NVS.h"
 
 const uint8_t BROADCAST_MAC[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 FirstCall* FirstCall::_instance = nullptr;
@@ -80,6 +81,8 @@ void FirstCall::onSend(const uint8_t* mac, esp_now_send_status_t status) {
     }
 }
 
+extern NVS nvs;
+
 void FirstCall::handleReceive(const uint8_t* senderMac, const uint8_t* data, int len) {
     // 检查是否来自自己的消息
     if (memcmp(senderMac, _selfMac, 6) == 0) return;
@@ -90,7 +93,14 @@ void FirstCall::handleReceive(const uint8_t* senderMac, const uint8_t* data, int
                       senderMac[0], senderMac[1], senderMac[2], 
                       senderMac[3], senderMac[4], senderMac[5],
                       senderID);
-        
+                      
+        nvs.putInt("MAC0",senderMac[0]);
+        nvs.putInt("MAC1",senderMac[1]);
+        nvs.putInt("MAC2",senderMac[2]);
+        nvs.putInt("MAC3",senderMac[3]);
+        nvs.putInt("MAC4",senderMac[4]);
+        nvs.putInt("MAC5",senderMac[5]);
+
         bool alreadyKnown = false;
         for (const auto& peer : _discoveredPeers) {
             if (memcmp(peer.data(), senderMac, 6) == 0) {

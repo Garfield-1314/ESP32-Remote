@@ -6,13 +6,14 @@
 #include "user_rtos.h"     // 包含新的RTOS头文件
 
 MacTransceiver transceiver(1);
-
+FirstCall firstCall(0x01);
 
 void setup() {
+  Serial.setPins(42, 41);
   Serial.begin(115200);
+
   delay(1000);  // 等待串口初始化
   
-  FirstCall firstCall(0x01);
   firstCall.begin();
   
   while(1) {

@@ -8,7 +8,7 @@ int datas[] = {0,0,0,0,0,0,0,0,0,0};
 
 // 任务配置数组定义
 rtos_task_t tasks[] = {
-  {"TASK1", task1, 4096, 1, NULL, 500},
+  // {"TASK1", task1, 4096, 1, NULL, 500},
   {"TASK2", task2, 4096, 1, NULL, 500},
   {"TASK3", task3, 4096, 1, NULL, 500},
   {"TASK4", task4, 4096, 1, NULL, 500},

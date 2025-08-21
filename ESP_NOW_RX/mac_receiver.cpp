@@ -14,9 +14,6 @@ MacTransceiver::MacTransceiver(uint8_t id) {
 }
 
 void MacTransceiver::begin(const uint8_t* targetMac) {
-    Serial.setPins(42, 41);
-    Serial.begin(115200);
-    
     if(targetMac) memcpy(_receiverMac, targetMac, 6);
     
     WiFi.mode(WIFI_STA);

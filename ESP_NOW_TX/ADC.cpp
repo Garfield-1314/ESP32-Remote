@@ -25,11 +25,41 @@ int ADC::readRaw(uint8_t pin) {
     return analogRead(pin);
 }
 
+// 读取指定引脚的滤波ADC值（滑动平均）
+int ADC::readRawFiltered(uint8_t pin) {
+    if (!validPin(pin)) return -1;
+    int pinIdx = -1;
+    for (int i = 0; i < PIN_COUNT; i++) {
+        if (adcPins[i] == pin) {
+            pinIdx = i;
+            break;
+        }
+    }
+    if (pinIdx == -1) return -1;
+    int value = analogRead(pin);
+    filterBuffer[pinIdx][filterIndex[pinIdx]] = value;
+    filterIndex[pinIdx] = (filterIndex[pinIdx] + 1) % FILTER_SIZE;
+    if (filterIndex[pinIdx] == 0) bufferFilled[pinIdx] = true;
+    int sum = 0;
+    uint8_t count = bufferFilled[pinIdx] ? FILTER_SIZE : filterIndex[pinIdx];
+    for (uint8_t i = 0; i < count; i++) {
+        sum += filterBuffer[pinIdx][i];
+    }
+    return sum / count;
+}
+
 // 读取指定引脚的电压值（保留3位小数）
 float ADC::readVoltage(uint8_t pin) {
     int rawValue = readRaw(pin);
     if (rawValue < 0) return NAN;  // 无效引脚返回NaN
     return rawValue * 3.3f / 4095.0f;  // 12位ADC转换公式
+}
+
+// 读取指定引脚的滤波电压值
+float ADC::readVoltageFiltered(uint8_t pin) {
+    int rawValue = readRawFiltered(pin);
+    if (rawValue < 0) return NAN;
+    return rawValue * 3.3f / 4095.0f;
 }
 
 // 创建全局实例

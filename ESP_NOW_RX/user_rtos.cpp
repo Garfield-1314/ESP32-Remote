@@ -1,8 +1,10 @@
 #include "user_rtos.h"
 #include "mac_receiver.h"  // 包含mac_receiver头文件
-
+#include "SBUS.h"
 // 外部对象声明
 extern MacTransceiver transceiver;
+extern int16_t sbusData[10];
+extern bfs::SbusTx sbus_tx;
 
 int datas[] = {0,0,0,0,0,0,0,0,0,0};
 
@@ -10,7 +12,7 @@ int datas[] = {0,0,0,0,0,0,0,0,0,0};
 rtos_task_t tasks[] = {
   // {"TASK1", task1, 4096, 1, NULL, 500},
   {"TASK2", task2, 4096, 1, NULL, 500},
-  {"TASK3", task3, 4096, 1, NULL, 500},
+  // {"TASK3", task3, 4096, 1, NULL, 500},
   {"TASK4", task4, 4096, 1, NULL, 500},
 };
 
@@ -35,8 +37,20 @@ void task2(void *pvParam) {
   
   for(;;) {
     // 采样操作预留位置
-    vTaskDelayUntil(&xLastWake, xFreq);
+    // Serial.print(sbusData[0]);
+    sbus_tx.data().ch[1] = sbusData[0];
+    sbus_tx.data().ch[2] = sbusData[1];
+    sbus_tx.data().ch[3] = sbusData[2];
+    sbus_tx.data().ch[4] = sbusData[3];
+
+    sbus_tx.data().ch17 = 0;
+    sbus_tx.data().ch18 = 0;
+    sbus_tx.data().failsafe = 0;
+    sbus_tx.data().lost_frame = 0;
+
+    sbus_tx.Write(); // 发送数据包
   }
+  vTaskDelayUntil(&xLastWake, xFreq);
 }
 
 void task3(void *pvParam) {
@@ -54,7 +68,7 @@ void task3(void *pvParam) {
 
 void task4(void *pvParam) {
   rtos_task_t* taskCfg = (rtos_task_t*)pvParam;
-  const TickType_t xFreq = pdMS_TO_TICKS(1000);
+  const TickType_t xFreq = pdMS_TO_TICKS(10);
   TickType_t xLastWake = xTaskGetTickCount();
   
   for(;;) {

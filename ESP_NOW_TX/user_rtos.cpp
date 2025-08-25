@@ -23,7 +23,7 @@ rtos_task_t tasks[] = {
   // {"TASK1", task1, 4096, 1, NULL, 500},
   {"TASK2", task2, 4096, 1, NULL, 500},
   {"TASK3", task3, 4096, 1, NULL, 500},
-  {"TASK4", task4, 4096, 1, NULL, 500},
+  // {"TASK4", task4, 4096, 1, NULL, 500},
   {"TASK5", task5, 2048, 1, NULL, 500},
 };
 
@@ -43,12 +43,14 @@ void task1(void *pvParam) {
 
 void task2(void *pvParam) {
   rtos_task_t* taskCfg = (rtos_task_t*)pvParam;
-  const TickType_t xFreq = pdMS_TO_TICKS(10);
+  const TickType_t xFreq = pdMS_TO_TICKS(1);
   TickType_t xLastWake = xTaskGetTickCount();
   
   for(;;) {
     datas[0] = adc.readRaw(4);
-    datas[1] = adc.readVoltage(4);
+    datas[1] = adc.readRaw(5);
+    datas[2] = 2048-adc.readRaw(6);
+    datas[3] = 2048-adc.readRaw(7);
     vTaskDelayUntil(&xLastWake, xFreq);
   }
 }
@@ -73,7 +75,7 @@ void task4(void *pvParam) {
   
   for(;;) {
     if(transceiver.isReceiveConnected()) {
-        // transceiver.printReceivedData();
+        transceiver.printReceivedData();
     }
     vTaskDelayUntil(&xLastWake, xFreq);
   }

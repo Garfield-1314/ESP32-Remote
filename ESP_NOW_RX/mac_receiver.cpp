@@ -1,5 +1,8 @@
 #include "mac_receiver.h"
 
+// 全局SBUS数据数组
+int16_t sbusData[10] = {0};
+
 // 初始化静态成员
 MacTransceiver* MacTransceiver::_instance = nullptr;
 
@@ -92,14 +95,16 @@ void MacTransceiver::updateReceiver() {
 }
 
 void MacTransceiver::printReceivedData() const {
-    Serial.print("Received data [ID:");
-    Serial.print(_rxData.id);
-    Serial.print("]: ");
-    for(int i = 0; i < 10; i++) {
-        Serial.print(_rxData.dataArray[i]);
-        if(i < 9) Serial.print(",");
-    }
-    Serial.println();
+    // Serial.print("Received data [ID:");
+    // Serial.print(_rxData.id);
+    // Serial.print("]: ");
+        for(int i = 0; i < 10; i++) {
+            // 将0-2047缩放到SBUS标准范围172-1811
+            sbusData[i] = (_rxData.dataArray[i] * (1811 - 172)) / 2047 + 172;
+            // Serial.print(sbusData[i]);
+            // if(i < 9) Serial.print(",");
+        }
+    // Serial.println();
 }
 
 // === 回调处理器 ===

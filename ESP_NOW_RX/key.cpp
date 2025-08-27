@@ -1,6 +1,5 @@
 #include "KEY.h"
 
-
 KEY::KEY(uint8_t pin, unsigned long shortPressTime, unsigned long longPressTime) :
   _pin(pin),
   _shortPressTime(shortPressTime),

@@ -47,10 +47,10 @@ void task2(void *pvParam) {
   TickType_t xLastWake = xTaskGetTickCount();
   
   for(;;) {
-    datas[0] = adc.readRaw(4);
-    datas[1] = adc.readRaw(5);
-    datas[2] = 2048-adc.readRaw(6);
-    datas[3] = 2048-adc.readRaw(7);
+    datas[0] = 2047-adc.readRawFiltered(5)+5;
+    datas[1] = 2047-adc.readRawFiltered(4)+5;
+    datas[2] = adc.readRawFiltered(6)+5;
+    datas[3] = adc.readRawFiltered(7)+5;
     vTaskDelayUntil(&xLastWake, xFreq);
   }
 }

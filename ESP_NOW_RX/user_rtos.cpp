@@ -1,10 +1,13 @@
 #include "user_rtos.h"
 #include "mac_receiver.h"  // 包含mac_receiver头文件
 #include "SBUS.h"
+#include "KEY.h"
 // 外部对象声明
 extern MacTransceiver transceiver;
 extern int16_t sbusData[10];
 extern bfs::SbusTx sbus_tx;
+
+KEY myButton(39);
 
 int datas[] = {0,0,0,0,0,0,0,0,0,0};
 
@@ -14,6 +17,7 @@ rtos_task_t tasks[] = {
   {"TASK2", task2, 4096, 1, NULL, 500},
   // {"TASK3", task3, 4096, 1, NULL, 500},
   {"TASK4", task4, 4096, 1, NULL, 500},
+  {"TASK5", task5, 4096/2, 1, NULL, 500},
 };
 
 const uint8_t taskCount = sizeof(tasks) / sizeof(rtos_task_t);
@@ -38,10 +42,12 @@ void task2(void *pvParam) {
   for(;;) {
     // 采样操作预留位置
     // Serial.print(sbusData[0]);
-    sbus_tx.data().ch[1] = sbusData[0];
-    sbus_tx.data().ch[2] = sbusData[1];
-    sbus_tx.data().ch[3] = sbusData[2];
-    sbus_tx.data().ch[4] = sbusData[3];
+    sbus_tx.data().ch[0] = sbusData[0];
+    sbus_tx.data().ch[1] = sbusData[1];
+    sbus_tx.data().ch[2] = sbusData[2];
+    sbus_tx.data().ch[3] = sbusData[3];
+    sbus_tx.data().ch[4] = sbusData[4];
+    sbus_tx.data().ch[5] = sbusData[5];
 
     sbus_tx.data().ch17 = 0;
     sbus_tx.data().ch18 = 0;
@@ -74,6 +80,33 @@ void task4(void *pvParam) {
   for(;;) {
     if(transceiver.isReceiveConnected()) {
         transceiver.printReceivedData();
+    }
+    vTaskDelayUntil(&xLastWake, xFreq);
+  }
+}
+
+
+void task5(void *pvParam) {
+  rtos_task_t* taskCfg = (rtos_task_t*)pvParam;
+  const TickType_t xFreq = pdMS_TO_TICKS(10);
+  TickType_t xLastWake = xTaskGetTickCount();
+  
+  for(;;) {
+    KEY::EventType event = myButton.update();
+
+    switch(event) {
+      case KEY::SHORT_PRESS:
+        Serial.println("Short Press Detected");
+        break;
+        
+      case KEY::LONG_PRESS:
+        delay(1000);
+        ESP.restart();
+        break;
+        
+      case KEY::NO_EVENT:
+        // No action
+        break;
     }
     vTaskDelayUntil(&xLastWake, xFreq);
   }

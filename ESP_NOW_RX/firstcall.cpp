@@ -37,7 +37,7 @@ void FirstCall::processDiscovery() {
         sendDiscovery();
         _lastSendTime = millis();
         
-        if (millis() - _discoverStart > 30000) {
+        if (millis() - _discoverStart > 120000) {
             Serial.println("[FirstCall] Discovery timeout. Please reset devices.");
         }
     }

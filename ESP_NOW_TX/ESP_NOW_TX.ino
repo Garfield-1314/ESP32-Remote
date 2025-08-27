@@ -5,20 +5,27 @@
 #include "user_rtos.h"  // 包含新的RTOS头文件
 #include "SwitchManager.h"
 #include "NVS.h"
+#include "led.h"
 
 extern MacTransceiver transceiver;
 extern SwitchManager switches;
 
 NVS nvs;
 FirstCall firstCall(0x01);
+LED led(3);
+
+extern KEY myButton;
 
 void setup() {
   Serial.begin(115200);
   nvs.begin("MAC");
   delay(1000);  // 等待串口初始化
-  
+  myButton.begin();
+
   firstCall.begin();
   adc.begin();
+  adc.zeroDriftInit(10);
+
   switches.begin();
 
   init_user_rtos();  // 调用RTOS初始化函数

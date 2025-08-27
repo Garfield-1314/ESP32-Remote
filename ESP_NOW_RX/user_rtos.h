@@ -20,7 +20,7 @@ void task1(void *pvParam);
 void task2(void *pvParam);
 void task3(void *pvParam);
 void task4(void *pvParam);
-
+void task5(void *pvParam);
 // 外部变量声明
 extern rtos_task_t tasks[];
 extern const uint8_t taskCount;

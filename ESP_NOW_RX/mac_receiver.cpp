@@ -95,15 +95,23 @@ void MacTransceiver::updateReceiver() {
 }
 
 void MacTransceiver::printReceivedData() const {
+    // 死区范围定义，可根据实际需求调整
+    #define DEADZONE_MIN 1015
+    #define DEADZONE_MAX 1035
     // Serial.print("Received data [ID:");
     // Serial.print(_rxData.id);
     // Serial.print("]: ");
-        for(int i = 0; i < 10; i++) {
-            // 将0-2047缩放到SBUS标准范围172-1811
-            sbusData[i] = (_rxData.dataArray[i] * (1811 - 172)) / 2047 + 172;
-            // Serial.print(sbusData[i]);
-            // if(i < 9) Serial.print(",");
+    for(int i = 0; i < 10; i++) {
+        int16_t raw = _rxData.dataArray[i];
+        // 死区处理
+        if (raw > DEADZONE_MIN && raw < DEADZONE_MAX) {
+            raw = (DEADZONE_MIN + DEADZONE_MAX) / 2;
         }
+        // 将0-2047缩放到SBUS标准范围172-1811
+        sbusData[i] = (raw * (1811 - 172)) / 2047 + 172;
+        // Serial.print(sbusData[i]);
+        // if(i < 9) Serial.print(",");
+    }
     // Serial.println();
 }
 

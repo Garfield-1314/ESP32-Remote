@@ -5,17 +5,21 @@
 #include "firstcall.h"
 #include "user_rtos.h"     // 包含新的RTOS头文件
 #include "SBUS.h"
+#include "KEY.h"
 
 MacTransceiver transceiver(1);
 FirstCall firstCall(0x01);
-bfs::SbusTx sbus_tx(&Serial, -1, -1, false, false); // RX=默认, TX=默认, 反相，非高速
+bfs::SbusTx sbus_tx(&Serial, -1, -1, true, false); // RX=默认, TX=默认, 反相，非高速
+
+extern KEY myButton;
 
 void setup() {
   sbus_tx.Begin();
   // Serial.begin(115200); // 用于调试
   delay(1000);  // 等待串口初始化
-  
+  myButton.begin();
   firstCall.begin();
+
   
   while(1) {
     firstCall.processDiscovery();
@@ -25,9 +29,9 @@ void setup() {
       break;
     }
   }
-  
-  // 初始化RTOS任务
   init_user_rtos();
+  // 初始化RTOS任务
+  
 }
 
 void loop() {

@@ -1,7 +1,7 @@
 #include "mac_receiver.h"
 
 // 全局SBUS数据数组
-int16_t sbusData[10] = {0};
+int16_t sbusData[11] = {0};
 
 // 初始化静态成员
 MacTransceiver* MacTransceiver::_instance = nullptr;
@@ -60,7 +60,7 @@ void MacTransceiver::begin(const uint8_t* targetMac) {
 // === 发送功能 ===
 void MacTransceiver::sendData(uint16_t d1, uint16_t d2, uint16_t d3, uint16_t d4,
                                 uint16_t d5,uint16_t d6,uint16_t d7,uint16_t d8,
-                                uint16_t d9,uint16_t d10) {
+                                uint16_t d9,uint16_t d10, uint16_t d11) {
     if (!_sendConnection) return;
     
     _txData.dataArray[0] = d1;
@@ -73,6 +73,7 @@ void MacTransceiver::sendData(uint16_t d1, uint16_t d2, uint16_t d3, uint16_t d4
     _txData.dataArray[7] = d8;
     _txData.dataArray[8] = d9;
     _txData.dataArray[9] = d10;
+    _txData.dataArray[10] = d11;
     
     esp_now_send(_receiverMac, (uint8_t*)&_txData, sizeof(_txData));
 }
@@ -85,12 +86,17 @@ void MacTransceiver::updateSender() {
     }
 }
 
+uint8_t flap = 0;
 // === 接收功能 ===
 void MacTransceiver::updateReceiver() {
     // 接收超时检测
     if (_receiveConnection && (millis() - _lastReceiveTime > _timeout)) {
         Serial.println("Receive timeout, connection may be interrupted!");
+        flap = 1;
         _receiveConnection = false;
+    }
+    else{
+        flap = 0;
     }
 }
 
@@ -101,14 +107,14 @@ void MacTransceiver::printReceivedData() const {
     // Serial.print("Received data [ID:");
     // Serial.print(_rxData.id);
     // Serial.print("]: ");
-    for(int i = 0; i < 10; i++) {
+    for(int i = 0; i < 11; i++) {
         int16_t raw = _rxData.dataArray[i];
         // 死区处理
         if (raw > DEADZONE_MIN && raw < DEADZONE_MAX) {
-            raw = (DEADZONE_MIN + DEADZONE_MAX) / 2;
+            raw = 1000;
         }
         // 将0-2047缩放到SBUS标准范围172-1811
-        sbusData[i] = (raw * (1811 - 172)) / 2047 + 172;
+        sbusData[i] = (raw * (1900 - 147)) / 2047 + 147;
         // Serial.print(sbusData[i]);
         // if(i < 9) Serial.print(",");
     }
@@ -117,7 +123,7 @@ void MacTransceiver::printReceivedData() const {
 
 // === 回调处理器 ===
 void MacTransceiver::handleDataSent(const uint8_t* mac, esp_now_send_status_t status) {
-    if (memcmp(mac, _receiverMac, 6) == 0) {
+    if (memcmp(mac, _receiverMac, 6) == 0) { 
         _sendConnection = (status == ESP_NOW_SEND_SUCCESS);
     }
 }

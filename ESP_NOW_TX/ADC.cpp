@@ -51,7 +51,7 @@ int ADC::readRawFiltered(uint8_t pin) {
         int value = analogRead(pin) - zeroOffset[pinIdx];
         value = value < 0 ? 0 : value;
         sum += value;
-        delay(2); // 可根据实际情况调整采样间隔
+        delay(1); // 可根据实际情况调整采样间隔
     }
     return sum / FILTER_SIZE;
 }
@@ -79,7 +79,7 @@ void ADC::zeroDriftInit(uint16_t sampleCount) {
         long sum = 0;
         for (uint16_t s = 0; s < sampleCount; s++) {
             sum += analogRead(adcPins[i]);
-            delay(2); // 可根据实际情况调整采样间隔
+            delay(1); // 可根据实际情况调整采样间隔
         }
         zeroOffset[i] = (sum / sampleCount)-1024;
     }

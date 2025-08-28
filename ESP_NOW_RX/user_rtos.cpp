@@ -4,7 +4,7 @@
 #include "KEY.h"
 // 外部对象声明
 extern MacTransceiver transceiver;
-extern int16_t sbusData[10];
+extern int16_t sbusData[11];
 extern bfs::SbusTx sbus_tx;
 
 KEY myButton(39);
@@ -34,6 +34,8 @@ void task1(void *pvParam) {
   }
 }
 
+extern uint8_t flap;
+
 void task2(void *pvParam) {
   rtos_task_t* taskCfg = (rtos_task_t*)pvParam;
   const TickType_t xFreq = pdMS_TO_TICKS(10);
@@ -42,21 +44,42 @@ void task2(void *pvParam) {
   for(;;) {
     // 采样操作预留位置
     // Serial.print(sbusData[0]);
+    if(flap == 1){
+        sbusData[0] = 1000;
+        sbusData[1] = 1000;
+        sbusData[2] = 1000;
+        sbusData[3] = 1000;
+
+        sbusData[4] = 1000;
+        sbusData[5] = 1000;
+        sbusData[6] = 1000;
+        sbusData[7] = 1000;
+        sbusData[8] = 2000;
+        sbusData[9] = 1000;
+        sbusData[10] = 1000;
+        sbusData[11] = 1000;
+    }
     sbus_tx.data().ch[0] = sbusData[0];
     sbus_tx.data().ch[1] = sbusData[1];
     sbus_tx.data().ch[2] = sbusData[2];
     sbus_tx.data().ch[3] = sbusData[3];
+
     sbus_tx.data().ch[4] = sbusData[4];
     sbus_tx.data().ch[5] = sbusData[5];
+    sbus_tx.data().ch[6] = sbusData[6];
+    sbus_tx.data().ch[7] = sbusData[7];
+    sbus_tx.data().ch[8] = sbusData[8];
+    sbus_tx.data().ch[9] = sbusData[9];
+    sbus_tx.data().ch[10] = sbusData[10];
+    sbus_tx.data().ch[11] = sbusData[11];
 
     sbus_tx.data().ch17 = 0;
     sbus_tx.data().ch18 = 0;
     sbus_tx.data().failsafe = 0;
     sbus_tx.data().lost_frame = 0;
-
     sbus_tx.Write(); // 发送数据包
+    vTaskDelayUntil(&xLastWake, xFreq);
   }
-  vTaskDelayUntil(&xLastWake, xFreq);
 }
 
 void task3(void *pvParam) {
@@ -66,7 +89,7 @@ void task3(void *pvParam) {
   
   for(;;) {
     if(transceiver.isSendConnected()) {
-        transceiver.sendData(datas[0], datas[1], datas[2], datas[3], datas[4], datas[5], datas[6], datas[7], datas[8], datas[9]);
+        transceiver.sendData(datas[0], datas[1], datas[2], datas[3], datas[4], datas[5], datas[6], datas[7], datas[8], datas[9], datas[10]);
     }
     vTaskDelayUntil(&xLastWake, xFreq);
   }

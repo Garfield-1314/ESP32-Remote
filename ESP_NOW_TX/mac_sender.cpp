@@ -59,7 +59,7 @@ void MacTransceiver::begin(const uint8_t* targetMac) {
 // === 发送功能 ===
 void MacTransceiver::sendData(uint16_t d1, uint16_t d2, uint16_t d3, uint16_t d4,
                                 uint16_t d5,uint16_t d6,uint16_t d7,uint16_t d8,
-                                uint16_t d9,uint16_t d10) {
+                                uint16_t d9,uint16_t d10,uint16_t d11) {
     if (!_sendConnection) return;
     
     _txData.dataArray[0] = d1;
@@ -72,6 +72,7 @@ void MacTransceiver::sendData(uint16_t d1, uint16_t d2, uint16_t d3, uint16_t d4
     _txData.dataArray[7] = d8;
     _txData.dataArray[8] = d9;
     _txData.dataArray[9] = d10;
+    _txData.dataArray[10] = d11;
     
     esp_now_send(_receiverMac, (uint8_t*)&_txData, sizeof(_txData));
 }

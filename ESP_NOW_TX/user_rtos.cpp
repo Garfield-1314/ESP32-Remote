@@ -16,7 +16,7 @@ const uint8_t switchCount = sizeof(switchPins) / sizeof(switchPins[0]);
 // 创建开关管理器实例
 SwitchManager switches(switchPins, switchCount);
 
-uint16_t datas[] = {0,0,0,0,0,0,0,0,0,0};
+uint16_t datas[] = {0,0,0,0,0,0,0,0,0,0,0};
 
 // 任务配置数组定义
 rtos_task_t tasks[] = {
@@ -47,10 +47,10 @@ void task2(void *pvParam) {
   TickType_t xLastWake = xTaskGetTickCount();
   
   for(;;) {
-    datas[0] = 2047-adc.readRawFiltered(5)+5;
-    datas[1] = 2047-adc.readRawFiltered(4)+5;
-    datas[2] = adc.readRawFiltered(6)+5;
-    datas[3] = adc.readRawFiltered(7)+5;
+    datas[0] = 2047-adc.readRawFiltered(5);
+    datas[1] = 2047-adc.readRawFiltered(4);
+    datas[2] = adc.readRawFiltered(6);
+    datas[3] = adc.readRawFiltered(7);
     vTaskDelayUntil(&xLastWake, xFreq);
   }
 }
@@ -62,7 +62,7 @@ void task3(void *pvParam) {
   
   for(;;) {
     if(transceiver.isSendConnected()) {
-        transceiver.sendData(datas[0], datas[1], datas[2], datas[3], datas[4], datas[5], datas[6], datas[7], datas[8], datas[9]);
+        transceiver.sendData(datas[0], datas[1], datas[2], datas[3], datas[4], datas[5], datas[6], datas[7], datas[8], datas[9],datas[10]);
     }
     vTaskDelayUntil(&xLastWake, xFreq);
   }
@@ -91,14 +91,53 @@ void task5(void *pvParam) {
   for(;;) {
     KEY::EventType event = myButton.update();
 
-    // Serial.printf("SW: %d,%d,%d,%d,%d,%d,%d,%d\n",switches.getState(0),switches.getState(1),switches.getState(2),switches.getState(3),switches.getState(4),switches.getState(5),switches.getState(6),switches.getState(7));
-    if(switches.getState(0)?datas[4] = 2047:datas[4] = 0);
-    if(switches.getState(1)?datas[5] = 2047:datas[5] = 0);
-    if(switches.getState(2)?datas[6] = 2047:datas[6] = 0);
-    if(switches.getState(3)?datas[7] = 2047:datas[7] = 0);
-    if(switches.getState(4)?datas[8] = 2047:datas[8] = 0);
-    if(switches.getState(5)?datas[9] = 2047:datas[9] = 0);
+  
+    if(switches.getState(7) == 1){
+      datas[4] =  2047;
+    }
+    else if(switches.getState(6) == 1){
+      datas[9] =  2047;
+    }
+    else if(!switches.getState(7) && !switches.getState(6)){
+      datas[4] =  0;
+      datas[9] =  0;
+    }
+    
+  
+    if(switches.getState(5) == 1){
+      datas[5] =  2047;
+    }
+    else if(switches.getState(4) == 1){
+      datas[10] =  2047;
+    }
+    else if(!switches.getState(5) && !switches.getState(4)){
+      datas[5] =  0;
+      datas[10] =  0;
+    }
+    
+    if(switches.getState(3) == 1){
+      datas[6] =  2047;
+    }
+    else if(switches.getState(2) == 1){
+      datas[6] =  0;
+    }
+    else if(!switches.getState(3) && !switches.getState(2)){
+      datas[6] =  1024;
+    }
 
+    if(switches.getState(1) == 1){
+      datas[7] =  2047;
+    }
+    else if(switches.getState(0) == 1){
+      
+      datas[8] = 2047;
+    }
+    else if(!switches.getState(1) && !switches.getState(0)){
+      datas[8] = 0;
+      datas[7] = 0;
+    }
+
+    // Serial.printf("SW: %d,%d,%d,%d,%d,%d,%d,%d\n",switches.getState(0),switches.getState(1),switches.getState(2),switches.getState(3),switches.getState(4),switches.getState(5),switches.getState(6),switches.getState(7));
 
     switch(event) {
       case KEY::SHORT_PRESS:

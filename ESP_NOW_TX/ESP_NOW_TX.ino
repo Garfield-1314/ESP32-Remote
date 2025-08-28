@@ -24,7 +24,7 @@ void setup() {
 
   firstCall.begin();
   adc.begin();
-  adc.zeroDriftInit(10);
+  adc.zeroDriftInit(20);
 
   switches.begin();
 

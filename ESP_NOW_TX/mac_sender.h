@@ -5,7 +5,7 @@
 #include <esp_now.h>
 
 // 定义数据结构（收发共用）
-#define ARRAY_SIZE 10
+#define ARRAY_SIZE 11
 struct DataStruct {
     uint8_t id;
     uint16_t dataArray[ARRAY_SIZE];
@@ -35,7 +35,7 @@ public:
     void begin(const uint8_t* targetMac = nullptr);
     
     // 发送功能
-    void sendData(uint16_t d1, uint16_t d2, uint16_t d3, uint16_t d4, uint16_t d5, uint16_t d6, uint16_t d7, uint16_t d8, uint16_t d9, uint16_t d10);
+    void sendData(uint16_t d1, uint16_t d2, uint16_t d3, uint16_t d4, uint16_t d5, uint16_t d6, uint16_t d7, uint16_t d8, uint16_t d9, uint16_t d10, uint16_t d11);
     void updateSender();
     
     // 接收功能

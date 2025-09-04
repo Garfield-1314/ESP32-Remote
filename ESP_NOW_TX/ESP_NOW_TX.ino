@@ -19,6 +19,8 @@ extern KEY myButton;
 void setup() {
   Serial.begin(115200);
   nvs.begin("MAC");
+  led.begin();
+  led.off();
   delay(1000);  // 等待串口初始化
   myButton.begin();
 

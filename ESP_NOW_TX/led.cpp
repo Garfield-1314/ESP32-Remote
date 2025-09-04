@@ -8,12 +8,12 @@ void LED::begin() {
 }
 
 void LED::on() {
-    digitalWrite(_pin, HIGH);
+    digitalWrite(_pin, LOW);
     _state = true;
 }
 
 void LED::off() {
-    digitalWrite(_pin, LOW);
+    digitalWrite(_pin, HIGH);
     _state = false;
 }
 

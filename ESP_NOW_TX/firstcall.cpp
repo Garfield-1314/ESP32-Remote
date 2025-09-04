@@ -1,6 +1,8 @@
 #include "firstcall.h"
 #include <cstring>
 #include "NVS.h"
+#include "led.h"
+
 
 const uint8_t BROADCAST_MAC[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 FirstCall* FirstCall::_instance = nullptr;
@@ -31,11 +33,13 @@ void FirstCall::begin() {
     _discoverStart = millis();
 }
 
+extern LED led;
 void FirstCall::processDiscovery() {
     if (_connected) return;
     
     if (millis() - _lastSendTime > 1000) {
         sendDiscovery();
+        led.toggle(); // 闪烁LED表示正在发现
         _lastSendTime = millis();
         
         if (millis() - _discoverStart > 30000) {

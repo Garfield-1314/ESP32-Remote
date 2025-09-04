@@ -1,5 +1,5 @@
 #include "mac_receiver.h"
-
+#include "led.h"
 // 全局SBUS数据数组
 int16_t sbusData[11] = {0};
 
@@ -78,11 +78,18 @@ void MacTransceiver::sendData(uint16_t d1, uint16_t d2, uint16_t d3, uint16_t d4
     esp_now_send(_receiverMac, (uint8_t*)&_txData, sizeof(_txData));
 }
 
+extern LED led;
 void MacTransceiver::updateSender() {
     // 3秒心跳维持连接
-    if (millis() - _lastSendHandshake > 3000) {
+    if (millis() - _lastSendHandshake > 2000) {
         esp_now_send(_receiverMac, (uint8_t*)&_txData, sizeof(_txData));
         _lastSendHandshake = millis();
+    }
+        // LED指示连接状态
+    if (_sendConnection) {
+        led.on(); // 连接正常，LED亮
+    } else {
+        led.off(); // 连接断开，LED灭
     }
 }
 

@@ -6,6 +6,9 @@
 #include "user_rtos.h"     // 包含新的RTOS头文件
 #include "SBUS.h"
 #include "KEY.h"
+#include "led.h"
+
+LED led(3); // 内置LED，ESP32通常为GPIO2
 
 MacTransceiver transceiver(1);
 FirstCall firstCall(0x01);
@@ -16,6 +19,7 @@ extern KEY myButton;
 void setup() {
   sbus_tx.Begin();
   // Serial.begin(115200); // 用于调试
+  led.begin();
   delay(1000);  // 等待串口初始化
   myButton.begin();
   firstCall.begin();

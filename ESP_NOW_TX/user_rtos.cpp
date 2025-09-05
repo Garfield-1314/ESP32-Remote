@@ -90,8 +90,7 @@ void task5(void *pvParam) {
   
   for(;;) {
     KEY::EventType event = myButton.update();
-
-  
+    
     if(switches.getState(7) == 1){
       datas[4] =  2047;
     }
@@ -103,7 +102,6 @@ void task5(void *pvParam) {
       datas[9] =  0;
     }
     
-  
     if(switches.getState(5) == 1){
       datas[5] =  2047;
     }

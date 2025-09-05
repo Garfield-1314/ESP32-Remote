@@ -85,12 +85,6 @@ void MacTransceiver::updateSender() {
         esp_now_send(_receiverMac, (uint8_t*)&_txData, sizeof(_txData));
         _lastSendHandshake = millis();
     }
-        // LED指示连接状态
-    if (_sendConnection) {
-        led.on(); // 连接正常，LED亮
-    } else {
-        led.off(); // 连接断开，LED灭
-    }
 }
 
 uint8_t flap = 0;
@@ -98,11 +92,19 @@ uint8_t flap = 0;
 void MacTransceiver::updateReceiver() {
     // 接收超时检测
     if (_receiveConnection && (millis() - _lastReceiveTime > _timeout)) {
-        Serial.println("Receive timeout, connection may be interrupted!");
+        // 超时，断开连接，LED以10Hz频率闪烁
+        static unsigned long lastBlinkTime = 0;
+        static bool ledState = false;
+        if (millis() - lastBlinkTime >= 100) { // 50ms翻转一次，周期100ms
+            ledState = !ledState;
+            lastBlinkTime = millis();
+            led.toggle();
+        }
         flap = 1;
-        _receiveConnection = false;
     }
-    else{
+    else if (_receiveConnection) {
+        // 连接正常，LED常亮
+        led.on();
         flap = 0;
     }
 }
@@ -140,6 +142,9 @@ void MacTransceiver::handleDataRecv(const uint8_t* senderMac, const uint8_t* dat
         memcpy(&_rxData, data, len);
         _receiveConnection = true;
         _lastReceiveTime = millis();
+    }
+    else {
+        _receiveConnection = false;
     }
 }
 

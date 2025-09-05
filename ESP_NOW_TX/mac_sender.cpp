@@ -20,9 +20,9 @@ void MacTransceiver::begin(const uint8_t* targetMac) {
     
     WiFi.mode(WIFI_STA);
     // 设置发送功率
-    #ifdef WIFI_POWER_21dBm
+    // #ifdef WIFI_POWER_21dBm
     WiFi.setTxPower(WIFI_POWER_21dBm);
-    #endif
+    // #endif
 
     // 设置1Mbps传输速率
     esp_wifi_config_espnow_rate(WIFI_IF_STA, WIFI_PHY_RATE_1M_L);
@@ -81,16 +81,27 @@ void MacTransceiver::sendData(uint16_t d1, uint16_t d2, uint16_t d3, uint16_t d4
 extern LED led;
 
 void MacTransceiver::updateSender() {
-    // 1秒心跳维持连接
+    // 2秒心跳维持连接
     if (millis() - _lastSendHandshake > 2000) {
         esp_now_send(_receiverMac, (uint8_t*)&_txData, sizeof(_txData));
         _lastSendHandshake = millis();
     }
     // LED指示连接状态
+    static unsigned long lastFlashTime = 0;
+    static bool ledState = false;
     if (_sendConnection) {
         led.on(); // 连接正常，LED亮
     } else {
-        led.off(); // 连接断开，LED灭
+        // 断开连接时LED以10Hz快闪
+        if (millis() - lastFlashTime >= 100) { // 10Hz = 0.1s周期，0.05s切换一次
+            ledState = !ledState;
+            if (ledState) {
+                led.on();
+            } else {
+                led.off();
+            }
+            lastFlashTime = millis();
+        }
     }
 }
 

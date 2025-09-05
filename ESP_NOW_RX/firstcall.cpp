@@ -34,7 +34,7 @@ extern LED led;
 void FirstCall::processDiscovery() {
     if (_connected) return;
     
-    if (millis() - _lastSendTime > 1000) {
+    if (millis() - _lastSendTime > 500) {
         sendDiscovery();
         led.toggle();
         _lastSendTime = millis();

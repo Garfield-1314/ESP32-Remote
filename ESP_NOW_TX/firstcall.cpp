@@ -42,7 +42,7 @@ void FirstCall::processDiscovery() {
         led.toggle(); // 闪烁LED表示正在发现
         _lastSendTime = millis();
         
-        if (millis() - _discoverStart > 30000) {
+        if (millis() - _discoverStart > 180000) {
             Serial.println("[FirstCall] Discovery timeout. Please reset devices.");
         }
     }

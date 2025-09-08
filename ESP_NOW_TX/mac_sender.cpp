@@ -109,7 +109,7 @@ void MacTransceiver::updateSender() {
 void MacTransceiver::updateReceiver() {
     // 接收超时检测
     if (_receiveConnection && (millis() - _lastReceiveTime > _timeout)) {
-        Serial.println("Receive timeout, connection may be interrupted!");
+        // Serial.println("Receive timeout, connection may be interrupted!");
         _receiveConnection = false;
     }
 }
@@ -118,7 +118,7 @@ void MacTransceiver::printReceivedData() const {
     Serial.print("Received data [ID:");
     Serial.print(_rxData.id);
     Serial.print("]: ");
-    for(int i = 0; i < 10; i++) {
+    for(int i = 0; i < 11; i++) {
         Serial.print(_rxData.dataArray[i]);
         if(i < 9) Serial.print(",");
     }
@@ -137,6 +137,9 @@ void MacTransceiver::handleDataRecv(const uint8_t* senderMac, const uint8_t* dat
         memcpy(&_rxData, data, len);
         _receiveConnection = true;
         _lastReceiveTime = millis();
+    }
+    else {
+        _receiveConnection = false;
     }
 }
 

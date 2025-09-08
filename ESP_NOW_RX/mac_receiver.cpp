@@ -21,9 +21,9 @@ void MacTransceiver::begin(const uint8_t* targetMac) {
     
     WiFi.mode(WIFI_STA);
     // 设置发送功率
-    #ifdef WIFI_POWER_21dBm
+    // #ifdef WIFI_POWER_21dBm
     WiFi.setTxPower(WIFI_POWER_21dBm);
-    #endif
+    // #endif
 
     // 设置1Mbps传输速率
     esp_wifi_config_espnow_rate(WIFI_IF_STA, WIFI_PHY_RATE_1M_L);

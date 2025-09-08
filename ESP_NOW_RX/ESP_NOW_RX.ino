@@ -19,9 +19,9 @@ NVS nvs;
 extern KEY myButton;
 
 void setup() {
-  // sbus_tx.Begin();
+  sbus_tx.Begin();
   nvs.begin("MAC");
-  Serial.begin(115200); // 用于调试
+  // Serial.begin(115200); // 用于调试
   led.begin();
   delay(1000);  // 等待串口初始化
   myButton.begin();

@@ -14,7 +14,7 @@ int datas[] = {0,0,0,0,0,0,0,0,0,0};
 // 任务配置数组定义
 rtos_task_t tasks[] = {
   // {"TASK1", task1, 4096, 1, NULL, 500},
-  // {"TASK2", task2, 4096, 1, NULL, 500},
+  {"TASK2", task2, 4096, 1, NULL, 500},
   // {"TASK3", task3, 4096, 1, NULL, 500},
   {"TASK4", task4, 4096, 1, NULL, 500},
   {"TASK5", task5, 4096/2, 1, NULL, 500},
@@ -77,7 +77,11 @@ void task2(void *pvParam) {
     sbus_tx.data().ch18 = 0;
     sbus_tx.data().failsafe = 0;
     sbus_tx.data().lost_frame = 0;
-    sbus_tx.Write(); // 发送数据包
+    // sbus_tx.Write(); // 发送数据包
+    if(flap == 0){
+      sbus_tx.Write(); // 发送数据包
+      // Serial.println("Flap!");
+    }
     vTaskDelayUntil(&xLastWake, xFreq);
   }
 }

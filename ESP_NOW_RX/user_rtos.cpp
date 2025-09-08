@@ -77,7 +77,11 @@ void task2(void *pvParam) {
     sbus_tx.data().ch18 = 0;
     sbus_tx.data().failsafe = 0;
     sbus_tx.data().lost_frame = 0;
-    sbus_tx.Write(); // 发送数据包
+    // sbus_tx.Write(); // 发送数据包
+    if(flap == 0){
+      sbus_tx.Write(); // 发送数据包
+      // Serial.println("Flap!");
+    }
     vTaskDelayUntil(&xLastWake, xFreq);
   }
 }

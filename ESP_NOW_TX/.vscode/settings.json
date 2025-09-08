@@ -6,6 +6,11 @@
         "string_view": "cpp",
         "ranges": "cpp",
         "span": "cpp",
-        "compare": "cpp"
+        "compare": "cpp",
+        "deque": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "initializer_list": "cpp",
+        "text_encoding": "cpp"
     }
 }
